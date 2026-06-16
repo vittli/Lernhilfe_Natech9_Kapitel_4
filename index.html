@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NaTech 9 &ndash; Kapitel 4: Energie und Leistung erfassen</title>
+<style>
+  :root {
+    --primary: #1a6b3c;
+    --primary-dark: #114d2b;
+    --accent: #f0a500;
+    --accent-light: #fef3d0;
+    --bg: #f5f7f5;
+    --card-bg: #ffffff;
+    --text: #1a2520;
+    --text-light: #4a6355;
+    --border: #c8ddd0;
+    --correct: #2d7a4f;
+    --wrong: #c0392b;
+    --correct-bg: #d4edda;
+    --wrong-bg: #f8d7da;
+    --radius: 10px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--text); font-size: 15px; }
+  header { background: linear-gradient(135deg, var(--primary-dark), var(--primary)); color: #fff; padding: 18px 24px 14px; }
+  header h1 { font-size: 1.35em; font-weight: bold; }
+  header p { font-size: 0.88em; opacity: 0.85; margin-top: 3px; }
+  nav { display: flex; flex-wrap: wrap; gap: 4px; background: var(--primary-dark); padding: 6px 12px; }
+  nav button { background: transparent; color: rgba(255,255,255,0.75); border: none; padding: 7px 14px; border-radius: 6px; font-size: 0.88em; cursor: pointer; transition: background 0.2s, color 0.2s; }
+  nav button:hover { background: rgba(255,255,255,0.15); color: #fff; }
+  nav button.active { background: var(--accent); color: var(--primary-dark); font-weight: bold; }
+  .tab { display: none; padding: 20px; max-width: 900px; margin: 0 auto; }
+  .tab.active { display: block; }
+  h2 { font-size: 1.15em; color: var(--primary); margin-bottom: 12px; border-left: 4px solid var(--accent); padding-left: 10px; }
+  h3 { font-size: 1em; color: var(--primary-dark); margin: 14px 0 6px; font-weight: bold; }
+
+  /* Concept cards */
+  .concept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 14px; margin-bottom: 20px; }
+  .concept-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); }
+  .concept-card .label { display: inline-block; background: var(--primary); color: #fff; font-size: 0.72em; padding: 2px 8px; border-radius: 20px; margin-bottom: 7px; }
+  .concept-card h3 { font-size: 0.97em; margin: 0 0 5px; color: var(--primary-dark); }
+  .concept-card p { font-size: 0.88em; color: var(--text-light); line-height: 1.5; }
+  .formula-box { background: var(--accent-light); border: 1.5px solid var(--accent); border-radius: 8px; padding: 10px 14px; margin: 8px 0; font-family: 'Courier New', monospace; font-size: 0.97em; }
+
+  /* Flashcards */
+  .fc-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; align-items: center; }
+  .fc-controls select, .fc-controls button { padding: 6px 13px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.88em; cursor: pointer; }
+  .fc-controls button { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .fc-controls button:hover { background: var(--primary-dark); }
+  .fc-counter { font-size: 0.85em; color: var(--text-light); margin-left: auto; }
+  .flashcard-wrap { perspective: 800px; width: 100%; max-width: 520px; height: 200px; margin: 0 auto 16px; cursor: pointer; }
+  .flashcard-inner { position: relative; width: 100%; height: 100%; transition: transform 0.5s; transform-style: preserve-3d; }
+  .flashcard-wrap.flipped .flashcard-inner { transform: rotateY(180deg); }
+  .fc-front, .fc-back { position: absolute; inset: 0; border-radius: var(--radius); padding: 22px 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; backface-visibility: hidden; -webkit-backface-visibility: hidden; box-shadow: var(--shadow); }
+  .fc-front { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; }
+  .fc-back { background: var(--accent-light); border: 2px solid var(--accent); color: var(--text); transform: rotateY(180deg); }
+  .fc-front .fc-q { font-size: 1.05em; font-weight: bold; line-height: 1.4; }
+  .fc-back .fc-a { font-size: 0.97em; line-height: 1.5; }
+  .fc-hint { font-size: 0.75em; opacity: 0.7; margin-top: 8px; }
+  .fc-nav { display: flex; gap: 10px; justify-content: center; }
+  .fc-nav button { background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 6px; padding: 7px 20px; font-size: 0.9em; cursor: pointer; }
+  .fc-nav button:hover { border-color: var(--primary); color: var(--primary); }
+
+  /* Glossary */
+  .glossary-search { width: 100%; padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 0.93em; margin-bottom: 12px; }
+  .glossary-table { width: 100%; border-collapse: collapse; }
+  .glossary-table th { background: var(--primary); color: #fff; padding: 8px 10px; text-align: left; font-size: 0.88em; }
+  .glossary-table td { padding: 7px 10px; font-size: 0.88em; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .glossary-table tr:nth-child(even) td { background: #f0f5f2; }
+  .glossary-table tr.hidden { display: none; }
+  .term-badge { background: var(--primary); color: #fff; font-size: 0.75em; padding: 1px 7px; border-radius: 10px; display: inline-block; margin-bottom: 2px; }
+
+  /* Formulas */
+  .formula-section { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; box-shadow: var(--shadow); }
+  .formula-section h3 { margin-top: 0; }
+  .calc-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-top: 10px; }
+  .calc-row label { font-size: 0.85em; color: var(--text-light); display: block; margin-bottom: 2px; }
+  .calc-row input { padding: 5px 8px; border: 1.5px solid var(--border); border-radius: 5px; width: 110px; font-size: 0.9em; }
+  .calc-row button { background: var(--primary); color: #fff; border: none; border-radius: 6px; padding: 6px 14px; font-size: 0.88em; cursor: pointer; }
+  .calc-result { margin-top: 8px; background: var(--accent-light); border: 1px solid var(--accent); border-radius: 6px; padding: 7px 12px; font-size: 0.93em; }
+  .unit-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  .unit-table th { background: var(--primary); color: #fff; padding: 6px 8px; font-size: 0.84em; text-align: left; }
+  .unit-table td { padding: 5px 8px; font-size: 0.84em; border-bottom: 1px solid var(--border); }
+  .unit-table tr:nth-child(even) td { background: #f0f5f2; }
+
+  /* Quiz */
+  .quiz-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .quiz-controls select, .quiz-controls button { padding: 6px 13px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.88em; cursor: pointer; }
+  .quiz-controls button { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .quiz-controls button:hover { background: var(--primary-dark); }
+  .progress-bar-wrap { background: var(--border); border-radius: 20px; height: 8px; margin-bottom: 14px; }
+  .progress-bar { background: var(--primary); border-radius: 20px; height: 8px; transition: width 0.4s; }
+  .quiz-status { font-size: 0.85em; color: var(--text-light); margin-bottom: 10px; }
+  .quiz-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+  .quiz-card .diff-badge { display: inline-block; font-size: 0.72em; padding: 2px 8px; border-radius: 12px; margin-bottom: 8px; font-weight: bold; }
+  .diff-easy { background: #d4edda; color: #155724; }
+  .diff-medium { background: #fff3cd; color: #856404; }
+  .diff-hard { background: #f8d7da; color: #721c24; }
+  .quiz-question { font-size: 1em; font-weight: bold; margin-bottom: 12px; line-height: 1.4; }
+  .quiz-options { display: flex; flex-direction: column; gap: 7px; }
+  .quiz-options button { background: var(--bg); border: 1.5px solid var(--border); border-radius: 7px; padding: 8px 12px; text-align: left; font-size: 0.9em; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+  .quiz-options button:hover { border-color: var(--primary); background: #eaf3ee; }
+  .quiz-options button.correct { background: var(--correct-bg); border-color: var(--correct); color: var(--correct); }
+  .quiz-options button.wrong { background: var(--wrong-bg); border-color: var(--wrong); color: var(--wrong); }
+  .quiz-options button.reveal { background: var(--correct-bg); border-color: var(--correct); opacity: 0.7; }
+  .quiz-options button:disabled { cursor: default; }
+  .quiz-feedback { margin-top: 10px; font-size: 0.88em; padding: 7px 11px; border-radius: 6px; }
+  .quiz-feedback.ok { background: var(--correct-bg); color: var(--correct); }
+  .quiz-feedback.fail { background: var(--wrong-bg); color: var(--wrong); }
+  .quiz-next { margin-top: 10px; background: var(--primary); color: #fff; border: none; border-radius: 6px; padding: 8px 20px; font-size: 0.9em; cursor: pointer; }
+  .quiz-next:hover { background: var(--primary-dark); }
+  .quiz-results { text-align: center; padding: 20px; }
+  .result-ring-wrap { display: flex; justify-content: center; margin: 14px 0; }
+  .result-ring { width: 110px; height: 110px; }
+  .result-score { font-size: 1.5em; font-weight: bold; color: var(--primary); }
+  .result-label { font-size: 0.88em; color: var(--text-light); }
+  .review-list { text-align: left; margin-top: 14px; }
+  .review-item { background: var(--wrong-bg); border-left: 4px solid var(--wrong); border-radius: 6px; padding: 8px 11px; margin-bottom: 8px; font-size: 0.88em; }
+  .review-item .ri-q { font-weight: bold; margin-bottom: 3px; }
+  .review-item .ri-a { color: var(--correct); }
+
+  /* Subchapter pills */
+  .sub-pill { display: inline-block; background: var(--primary); color: #fff; font-size: 0.72em; padding: 2px 8px; border-radius: 10px; margin-right: 4px; margin-bottom: 4px; }
+  .info-box { background: #eaf3ee; border-left: 4px solid var(--primary); border-radius: 6px; padding: 10px 13px; margin: 10px 0; font-size: 0.88em; }
+</style>
+</head>
+<body>
+<header>
+  <h1>NaTech 9 &ndash; Kapitel 4: Energie und Leistung erfassen</h1>
+  <p>Interaktive Lernhilfe &bull; Konzepte &bull; Formeln &bull; Lernk&auml;rtchen &bull; Quiz</p>
+</header>
+<nav id="mainNav">
+  <button class="active" onclick="showTab('konzepte',this)">&#127775; Konzepte</button>
+  <button onclick="showTab('formeln',this)">&#128200; Formeln &amp; Rechner</button>
+  <button onclick="showTab('glossar',this)">&#128218; Glossar</button>
+  <button onclick="showTab('lernkaertchen',this)">&#127183; Lernk&auml;rtchen</button>
+  <button onclick="showTab('quiz',this)">&#127358; Quiz</button>
+</nav>
+
+<!-- ==================== KONZEPTE ==================== -->
+<div id="konzepte" class="tab active">
+  <h2>Kernkonzepte</h2>
+
+  <h3><span class="sub-pill">4.1 &amp; 4.2</span> Energie &ndash; Grundlagen</h3>
+  <div class="concept-grid">
+    <div class="concept-card">
+      <span class="label">Begriff</span>
+      <h3>Lageenergie (E<sub>Lage</sub>)</h3>
+      <p>Energie, die ein K&ouml;rper durch seine H&ouml;he (Bezug: Boden) hat. Abh&auml;ngig von Masse und H&ouml;he.</p>
+      <div class="formula-box">E<sub>Lage</sub> = m &middot; g &middot; h</div>
+      <p style="font-size:0.82em;color:var(--text-light);">m = Masse [kg], g = 9,81 m/s&sup2;, h = H&ouml;he [m], E in Joule [J]</p>
+    </div>
+    <div class="concept-card">
+      <span class="label">Begriff</span>
+      <h3>Bewegungsenergie (E<sub>Bew</sub>)</h3>
+      <p>Energie, die ein bewegtes Objekt besitzt. Abh&auml;ngig von Masse und Geschwindigkeit.</p>
+      <div class="formula-box">E<sub>Bew</sub> = &frac12; &middot; m &middot; v&sup2;</div>
+      <p style="font-size:0.82em;color:var(--text-light);">m = Masse [kg], v = Geschwindigkeit [m/s], E in Joule [J]</p>
+    </div>
+    <div class="concept-card">
+      <span class="label">Gesetz</span>
+      <h3>Energieerhaltung</h3>
+      <p>Energie kann weder erzeugt noch vernichtet werden. Sie wird nur von einer Form in eine andere umgewandelt. Ein Teil wird oft in thermische Energie umgewandelt.</p>
+    </div>
+    <div class="concept-card">
+      <span class="label">Beispiel</span>
+      <h3>Kr&auml;hen &amp; Lageenergie</h3>
+      <p>Kr&auml;hen nutzen Lageenergie, um N&uuml;sse zu knacken: Sie heben die Nuss in die H&ouml;he (Lageenergie) &rarr; Nuss f&auml;llt &rarr; Lageenergie wird in Bewegungsenergie umgewandelt &rarr; Aufprall (Verformungsenergie).</p>
+    </div>
+    <div class="concept-card">
+      <span class="label">Konzept</span>
+      <h3>Energieumwandlung Stausee</h3>
+      <p>Lageenergie (Wasser im Stausee) &rarr; Bewegungsenergie (fallendes Wasser) &rarr; Elektrische Energie (Generator/Turbine). Etwa 54% der Schweizer Elektrizit&auml;t kommt aus Wasserkraftwerken.</p>
+    </div>
+  </div>
+
+  <h3><span class="sub-pill">4.3</span> Wirkungsgrad</h3>
+  <div class="concept-grid">
+    <div class="concept-card">
+      <span class="label">Formel</span>
+      <h3>Wirkungsgrad (&eta;)</h3>
+      <p>Gibt an, welcher Anteil der zugef&uuml;hrten Energie in die gew&uuml;nschte Energieform umgewandelt wird.</p>
+      <div class="formula-box">&eta; = genutzte Energie / zugef&uuml;hrte Energie</div>
+      <p style="font-size:0.82em;color:var(--text-light);">&eta; = eta (griechischer Buchstabe). Wert zwischen 0 und 1 (oder 0% &ndash; 100%).</p>
+    </div>
+    <div class="concept-card">
+      <span class="label">Beispiel</span>
+      <h3>Wirkungsgrade Lampen</h3>
+      <p>Gl&uuml;hlampe: ca. 5%, Halogenlampe: ca. 10%, Leuchtstoffr&ouml;hre: ca. 25%, Energiesparlampe: ca. 25%, LED: ca. 40%. Je h&ouml;her, desto effizienter!</p>
+    </div>
+    <div class="concept-card">
+      <span class="label">Konzept</span>
+      <h3>Energieentwertung</h3>
+      <p>Bei jeder Umwandlung wird ein Teil der Energie in thermische Energie umgewandelt, die nicht mehr sinnvoll genutzt werden kann &rarr; Energieentwertung.</p>
+    </div>
+    <div class="concept-card">
+      <span class="label">Theorie</span>
+      <h3>Perpetuum mobile</h3>
+      <p>Ein Ger&auml;t, das ewig ohne Energiezufuhr l&auml;uft, gibt es nicht. Energie kann nicht aus dem Nichts erzeugt werden. Bei jeder Energieumwandlung entsteht thermische Energie (Reibung).</p>
+    </div>
+  </div>
+
+  <h3><span class="sub-pill">4.4</span> Leistung im Alltag</h3>
+  <div class="concept-grid">
+    <div class="concept-card">
+      <span class="label">Formel</span>
+      <h3>Leistung (P)</h3>
+      <p>Gibt an, wie viel Energie pro Sekunde umgewandelt wird.</p>
+      <div class="formula-box">P = E / t</div>
+      <p style="font-size:0.82em;color:var(--text-light);">P in Watt [W], E in Joule [J], t in Sekunden [s]. 1 W = 1 J/s</p>
+    </div>
+    <div class="concept-card">
+      <span class="label">Einheit</span>
+      <h3>Kilowattstunde (kWh)</h3>
+      <p>Einheit f&uuml;r Energie, h&auml;ufig bei elektrischen Ger&auml;ten. 1 kWh = 1 kW &middot; 1 h = 3 600 000 J = 3600 kJ.</p>
+    </div>
+    <div class="concept-card">
+      <span class="label">Beispiel</span>
+      <h3>Stand-by-Betrieb</h3>
+      <p>Ger&auml;te im Stand-by verbrauchen weiterhin Energie (z.B. f&uuml;r Bereitschafts-LED). Im Jahr kann dies erhebliche Kosten verursachen. Fernseher: ca. 0,5 W im Stand-by.</p>
+    </div>
+    <div class="concept-card">
+      <span class="label">Konzept</span>
+      <h3>2000-Watt-Gesellschaft</h3>
+      <p>Modell f&uuml;r nachhaltige Energienutzung: maximal 2000 W Dauerleistung pro Person. In der Schweiz liegt der Durchschnitt aktuell bei ca. 5000 W.</p>
+    </div>
+  </div>
+
+  <h3><span class="sub-pill">4.5</span> Energieversorgung</h3>
+  <div class="concept-grid">
+    <div class="concept-card">
+      <span class="label">Erneuerbar</span>
+      <h3>Erneuerbare Energietr&auml;ger</h3>
+      <p>Erneuern sich sehr schnell oder stehen quasi unbegrenzt zur Verf&uuml;gung: Sonne, Wind, Wasser (Wasserenergie), Biomasse. M&uuml;ssen nur nutzbar gemacht werden.</p>
+    </div>
+    <div class="concept-card">
+      <span class="label">Nicht erneuerbar</span>
+      <h3>Nicht erneuerbare Energietr&auml;ger</h3>
+      <p>Rohstoffe, die sich nicht erneuern und begrenzt vorhanden sind: Kohle, Erd&ouml;l, Erdgas (fossile Brennstoffe), Uran (Kernenergie).</p>
+    </div>
+    <div class="concept-card">
+      <span class="label">Schweiz</span>
+      <h3>Energieversorgung Schweiz</h3>
+      <p>Ca. 54% aus Wasserkraftwerken, ca. 37% aus Kernenergieanlagen, ca. 4,5% aus anderen erneuerbaren Energien (Stand 2019). Wind wird in der Schweiz kaum genutzt.</p>
+    </div>
+    <div class="concept-card">
+      <span class="label">Anlagen</span>
+      <h3>Energieanlagen im Vergleich</h3>
+      <p>Wasserkraft, Windenergie, Fotovoltaik, thermische Solaranlage, Kernenergie, Kohle- und Erd&ouml;lenergieanlagen, Biomasseanlage. Jede hat Vor- und Nachteile.</p>
+    </div>
+  </div>
+
+  <h3><span class="sub-pill">4.6</span> Energie bewusst nutzen</h3>
+  <div class="concept-grid">
+    <div class="concept-card">
+      <span class="label">Haushalt</span>
+      <h3>Energiesparen im Haushalt</h3>
+      <p>Warmwasser sparsam verwenden, Stand-by vermeiden, LED-Lampen einsetzen, gute W&auml;rmed&auml;mmung, Geschirrsp&uuml;ler/Waschmaschine erst bei Vollast betreiben.</p>
+    </div>
+    <div class="concept-card">
+      <span class="label">Bau</span>
+      <h3>Energieeffizientes Bauen</h3>
+      <p>Massnahmen: Sonnenkollektoren, gute Heizung, W&auml;rmed&auml;mmung, intelligente L&uuml;ftung, effiziente Beleuchtung. Spart Energie und Kosten.</p>
+    </div>
+  </div>
+
+  <div class="info-box">
+    <strong>Wichtig:</strong> g = 9,81 m/s&sup2; ist die Erdbeschleunigung. Die Einheit der Leistung ist Watt (W) = Joule/Sekunde. &eta; (Eta) ist der Wirkungsgrad &ndash; wird als Dezimalzahl (0&ndash;1) oder Prozent (0%&ndash;100%) angegeben.
+  </div>
+</div>
+
+<!-- ==================== FORMELN ==================== -->
+<div id="formeln" class="tab">
+  <h2>Formeln &amp; Rechner</h2>
+
+  <div class="formula-section">
+    <h3>Lageenergie-Rechner</h3>
+    <p style="font-size:0.88em;margin-bottom:8px;">Formel: E<sub>Lage</sub> = m &middot; g &middot; h &nbsp;|&nbsp; g = 9,81 m/s&sup2;</p>
+    <div class="calc-row">
+      <div><label>Masse m [kg]</label><input type="number" id="lage_m" placeholder="z.B. 0.01"></div>
+      <div><label>H&ouml;he h [m]</label><input type="number" id="lage_h" placeholder="z.B. 40"></div>
+      <button onclick="calcLage()">Berechnen</button>
+    </div>
+    <div id="lage_result" class="calc-result" style="display:none;"></div>
+    <p style="font-size:0.82em;color:var(--text-light);margin-top:6px;">Umstellung: h = E<sub>Lage</sub> / (m &middot; g) &nbsp;|&nbsp; m = E<sub>Lage</sub> / (g &middot; h)</p>
+  </div>
+
+  <div class="formula-section">
+    <h3>Bewegungsenergie-Rechner</h3>
+    <p style="font-size:0.88em;margin-bottom:8px;">Formel: E<sub>Bew</sub> = &frac12; &middot; m &middot; v&sup2;</p>
+    <div class="calc-row">
+      <div><label>Masse m [kg]</label><input type="number" id="bew_m" placeholder="z.B. 300"></div>
+      <div><label>Geschwindigkeit v [m/s]</label><input type="number" id="bew_v" placeholder="z.B. 25"></div>
+      <button onclick="calcBew()">Berechnen</button>
+    </div>
+    <div id="bew_result" class="calc-result" style="display:none;"></div>
+    <p style="font-size:0.82em;color:var(--text-light);margin-top:6px;">Umstellung: v = &radic;(2 &middot; E<sub>Bew</sub> / m) &nbsp;|&nbsp; m = 2 &middot; E<sub>Bew</sub> / v&sup2;</p>
+  </div>
+
+  <div class="formula-section">
+    <h3>Leistungs-Rechner</h3>
+    <p style="font-size:0.88em;margin-bottom:8px;">Formel: P = E / t</p>
+    <div class="calc-row">
+      <div><label>Energie E [J]</label><input type="number" id="leist_e" placeholder="z.B. 4000"></div>
+      <div><label>Zeit t [s]</label><input type="number" id="leist_t" placeholder="z.B. 20"></div>
+      <button onclick="calcLeistung()">Berechnen</button>
+    </div>
+    <div id="leist_result" class="calc-result" style="display:none;"></div>
+    <p style="font-size:0.82em;color:var(--text-light);margin-top:6px;">Umstellung: E = P &middot; t &nbsp;|&nbsp; t = E / P</p>
+  </div>
+
+  <div class="formula-section">
+    <h3>Wirkungsgrad-Rechner</h3>
+    <p style="font-size:0.88em;margin-bottom:8px;">Formel: &eta; = genutzte Energie / zugef&uuml;hrte Energie</p>
+    <div class="calc-row">
+      <div><label>Genutzte Energie [J]</label><input type="number" id="wg_genutzt" placeholder="z.B. 100"></div>
+      <div><label>Zugef&uuml;hrte Energie [J]</label><input type="number" id="wg_zugef" placeholder="z.B. 500"></div>
+      <button onclick="calcWirkung()">Berechnen</button>
+    </div>
+    <div id="wg_result" class="calc-result" style="display:none;"></div>
+  </div>
+
+  <div class="formula-section">
+    <h3>Einheiten-Umrechnung</h3>
+    <table class="unit-table">
+      <tr><th>Von</th><th>Nach</th><th>Rechnung</th></tr>
+      <tr><td>1 kWh</td><td>Joule</td><td>1 kWh = 3 600 000 J = 3600 kJ</td></tr>
+      <tr><td>1 kW</td><td>Watt</td><td>1 kW = 1000 W</td></tr>
+      <tr><td>1 Ws</td><td>Joule</td><td>1 Ws = 1 J</td></tr>
+      <tr><td>1 kJ</td><td>Joule</td><td>1 kJ = 1000 J</td></tr>
+      <tr><td>1 TJ</td><td>Joule</td><td>1 TJ = 10<sup>12</sup> J</td></tr>
+      <tr><td>1 MJ</td><td>Joule</td><td>1 MJ = 1 000 000 J</td></tr>
+      <tr><td>1 kcal</td><td>Joule</td><td>1 kcal = 4200 J</td></tr>
+      <tr><td>1 min</td><td>Sekunden</td><td>1 min = 60 s</td></tr>
+      <tr><td>1 h</td><td>Sekunden</td><td>1 h = 3600 s</td></tr>
+    </table>
+  </div>
+
+  <div class="formula-section">
+    <h3>kWh-Umrechner</h3>
+    <div class="calc-row">
+      <div><label>kWh eingeben</label><input type="number" id="kwh_val" placeholder="z.B. 1"></div>
+      <button onclick="calcKwh()">Berechnen</button>
+    </div>
+    <div id="kwh_result" class="calc-result" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- ==================== GLOSSAR ==================== -->
+<div id="glossar" class="tab">
+  <h2>Glossar</h2>
+  <input type="text" class="glossary-search" id="glossSearch" placeholder="Suche nach Begriff oder Erkl&auml;rung..." oninput="filterGloss()">
+  <table class="glossary-table">
+    <tr><th style="width:35%">Begriff</th><th>Erkl&auml;rung</th></tr>
+    <tbody id="glossBody">
+      <tr><td><strong>Energie</strong></td><td>Grundlegender physikalischer Begriff; tritt in vielen Formen auf (Lage-, Beweg-, thermische, chemische, elektrische, Strahlungsenergie). Einheit: Joule [J].</td></tr>
+      <tr><td><strong>Lageenergie (E<sub>Lage</sub>)</strong></td><td>Energie eines K&ouml;rpers aufgrund seiner H&ouml;he &uuml;ber dem Boden. Formel: E = m &middot; g &middot; h.</td></tr>
+      <tr><td><strong>Bewegungsenergie (E<sub>Bew</sub>)</strong></td><td>Energie eines bewegten K&ouml;rpers. Formel: E = &frac12; &middot; m &middot; v&sup2;.</td></tr>
+      <tr><td><strong>Energieerhaltung</strong></td><td>Energie kann weder erzeugt noch vernichtet werden &ndash; sie wird nur umgewandelt.</td></tr>
+      <tr><td><strong>Energieumwandlung</strong></td><td>Wechsel von einer Energieform in eine andere, z.B. Lageenergie &rarr; Bewegungsenergie.</td></tr>
+      <tr><td><strong>Energieentwertung</strong></td><td>Bei jeder Umwandlung wird ein Teil Energie in nicht nutzbare W&auml;rme umgewandelt. Energie wird dadurch &laquo;weniger wertvoll&raquo;.</td></tr>
+      <tr><td><strong>Leistung (P)</strong></td><td>Gibt an, wie viel Energie pro Zeiteinheit umgewandelt wird. Formel: P = E / t. Einheit: Watt [W] = J/s.</td></tr>
+      <tr><td><strong>Watt [W]</strong></td><td>Einheit der Leistung. 1 Watt = 1 Joule pro Sekunde.</td></tr>
+      <tr><td><strong>Joule [J]</strong></td><td>Einheit der Energie. 1 J = 1 W &middot; s = 1 kg &middot; m&sup2;/s&sup2;.</td></tr>
+      <tr><td><strong>Kilowattstunde [kWh]</strong></td><td>Einheit f&uuml;r Energie, gebr&auml;uchlich bei elektrischen Ger&auml;ten. 1 kWh = 3 600 000 J.</td></tr>
+      <tr><td><strong>Wirkungsgrad (&eta;)</strong></td><td>Verh&auml;ltnis von genutzter zu zugef&uuml;hrter Energie. &eta; = E<sub>genutzt</sub> / E<sub>zugef&uuml;hrt</sub>. Wert 0&ndash;1 oder 0%&ndash;100%.</td></tr>
+      <tr><td><strong>Energiewandler</strong></td><td>Ger&auml;t, das Energie von einer Form in eine andere umwandelt, z.B. Turbine, Generator, Lampe.</td></tr>
+      <tr><td><strong>Erdbeschleunigung (g)</strong></td><td>Beschleunigung, mit der ein freier K&ouml;rper in Richtung Erdmittelpunkt beschleunigt wird. g = 9,81 m/s&sup2;.</td></tr>
+      <tr><td><strong>Perpetuum mobile</strong></td><td>Hypothetische Maschine, die ewig ohne Energiezufuhr l&auml;uft. Kann nicht gebaut werden (Energieerhaltungssatz).</td></tr>
+      <tr><td><strong>Thermische Energie</strong></td><td>W&auml;rmeenergie; h&auml;ufig unerw&uuml;nschtes Produkt von Energieumwandlungen.</td></tr>
+      <tr><td><strong>Elektrische Energie</strong></td><td>Energie, die durch elektrischen Strom &uuml;bertragen wird. Wird in Joule oder kWh gemessen.</td></tr>
+      <tr><td><strong>Strahlungsenergie</strong></td><td>Energie, die durch elektromagnetische Wellen (z.B. Licht) transportiert wird.</td></tr>
+      <tr><td><strong>Chemische Energie</strong></td><td>In chemischen Verbindungen gespeicherte Energie, z.B. in Kohle, Erd&ouml;l, Nahrung.</td></tr>
+      <tr><td><strong>Erneuerbare Energietr&auml;ger</strong></td><td>Nat&uuml;rliche Energiequellen, die sich schnell erneuern: Sonne, Wind, Wasser, Biomasse.</td></tr>
+      <tr><td><strong>Nicht erneuerbare Energietr&auml;ger</strong></td><td>Rohstoffe, die sich nicht erneuern (Kohle, Erd&ouml;l, Erdgas, Uran).</td></tr>
+      <tr><td><strong>Fossile Brennstoffe</strong></td><td>Kohle, Erd&ouml;l, Erdgas &ndash; entstanden aus abgestorbenen Organismen vor Millionen Jahren.</td></tr>
+      <tr><td><strong>Kernenergie</strong></td><td>Energie aus der Spaltung von Atomkernen (z.B. Uran). Wird in Kernenergieanlagen genutzt.</td></tr>
+      <tr><td><strong>Wasserkraft</strong></td><td>Nutzung der Bewegungs- und Lageenergie von Wasser zur Stromerzeugung.</td></tr>
+      <tr><td><strong>Fotovoltaik</strong></td><td>Umwandlung von Strahlungsenergie der Sonne in elektrische Energie mithilfe von Solarzellen.</td></tr>
+      <tr><td><strong>Biomasse</strong></td><td>Organische Substanzen (Pflanzen, Tiere, Abf&auml;lle), die als Energietr&auml;ger genutzt werden k&ouml;nnen.</td></tr>
+      <tr><td><strong>Stand-by-Betrieb</strong></td><td>Wartezustand eines elektrischen Ger&auml;ts; verbraucht weiterhin Energie, obwohl das Ger&auml;t nicht aktiv genutzt wird.</td></tr>
+      <tr><td><strong>Energiezähler</strong></td><td>Ger&auml;t, das den Energieverbrauch eines Haushalts in kWh misst (auch Energiekostenmonitor).</td></tr>
+      <tr><td><strong>2000-Watt-Gesellschaft</strong></td><td>Modell f&uuml;r nachhaltige Lebensweise mit max. 2000 W Dauerleistung pro Person.</td></tr>
+      <tr><td><strong>Energiesparhaus</strong></td><td>Oberbegriff f&uuml;r Geb&auml;ude mit verschiedenen Massnahmen zur Reduktion des Energieverbrauchs.</td></tr>
+      <tr><td><strong>Hubarbeit</strong></td><td>Arbeit, die beim Anheben eines K&ouml;rpers geleistet wird; wird als Lageenergie gespeichert.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ==================== LERNKAERTCHEN ==================== -->
+<div id="lernkaertchen" class="tab">
+  <h2>Lernk&auml;rtchen</h2>
+  <div class="fc-controls">
+    <select id="fcFilter" onchange="initFC()">
+      <option value="all">Alle Themen</option>
+      <option value="lage_bew">Lage- &amp; Bewegungsenergie</option>
+      <option value="wirkung">Wirkungsgrad</option>
+      <option value="leistung">Leistung &amp; Einheiten</option>
+      <option value="versorgung">Energieversorgung</option>
+      <option value="sparen">Energie sparen</option>
+    </select>
+    <button onclick="shuffleFC()">&#128256; Mischen</button>
+    <span class="fc-counter" id="fcCounter"></span>
+  </div>
+  <div class="flashcard-wrap" id="fcWrap" onclick="flipFC()">
+    <div class="flashcard-inner" id="fcInner">
+      <div class="fc-front"><div class="fc-q" id="fcQ"></div><div class="fc-hint">Antwort anzeigen &rarr; tippen</div></div>
+      <div class="fc-back"><div class="fc-a" id="fcA"></div></div>
+    </div>
+  </div>
+  <div class="fc-nav">
+    <button onclick="prevFC()">&#8592; Zur&uuml;ck</button>
+    <button onclick="nextFC()">Weiter &#8594;</button>
+  </div>
+</div>
+
+<!-- ==================== QUIZ ==================== -->
+<div id="quiz" class="tab">
+  <h2>Quiz</h2>
+  <div class="quiz-controls">
+    <select id="quizTopic">
+      <option value="all">Alle Themen</option>
+      <option value="lage_bew">Lage- &amp; Bewegungsenergie</option>
+      <option value="wirkung">Wirkungsgrad</option>
+      <option value="leistung">Leistung &amp; Einheiten</option>
+      <option value="versorgung">Energieversorgung</option>
+      <option value="sparen">Energie sparen</option>
+    </select>
+    <select id="quizDiff">
+      <option value="all">Alle Schwierigkeiten</option>
+      <option value="easy">Einfach</option>
+      <option value="medium">Mittel</option>
+      <option value="hard">Schwer</option>
+    </select>
+    <button onclick="startQuiz()">Quiz starten</button>
+  </div>
+  <div id="quizArea" style="display:none;">
+    <div class="progress-bar-wrap"><div class="progress-bar" id="quizProgress"></div></div>
+    <div class="quiz-status" id="quizStatus"></div>
+    <div class="quiz-card" id="quizCard"></div>
+  </div>
+  <div id="quizResults" style="display:none;"></div>
+  <p id="quizIntro" style="font-size:0.9em;color:var(--text-light);">W&auml;hle Thema und Schwierigkeitsgrad, dann klicke &laquo;Quiz starten&raquo;.</p>
+</div>
+
+<script>
+// ---- TAB NAVIGATION ----
+function showTab(id, btn) {
+  var tabs = document.querySelectorAll('.tab');
+  for (var i = 0; i < tabs.length; i++) { tabs[i].classList.remove('active'); }
+  document.getElementById(id).classList.add('active');
+  var btns = document.querySelectorAll('nav button');
+  for (var j = 0; j < btns.length; j++) { btns[j].classList.remove('active'); }
+  if (btn) { btn.classList.add('active'); }
+}
+
+// ---- CALCULATORS ----
+function calcLage() {
+  var m = parseFloat(document.getElementById('lage_m').value);
+  var h = parseFloat(document.getElementById('lage_h').value);
+  var r = document.getElementById('lage_result');
+  if (isNaN(m) || isNaN(h)) { r.innerHTML = 'Bitte beide Werte eingeben.'; r.style.display='block'; return; }
+  var e = m * 9.81 * h;
+  r.innerHTML = 'E<sub>Lage</sub> = ' + m + ' kg &times; 9,81 m/s&sup2; &times; ' + h + ' m = <strong>' + e.toFixed(2) + ' J</strong> = ' + (e/1000).toFixed(4) + ' kJ';
+  r.style.display = 'block';
+}
+function calcBew() {
+  var m = parseFloat(document.getElementById('bew_m').value);
+  var v = parseFloat(document.getElementById('bew_v').value);
+  var r = document.getElementById('bew_result');
+  if (isNaN(m) || isNaN(v)) { r.innerHTML = 'Bitte beide Werte eingeben.'; r.style.display='block'; return; }
+  var e = 0.5 * m * v * v;
+  r.innerHTML = 'E<sub>Bew</sub> = 0,5 &times; ' + m + ' kg &times; (' + v + ' m/s)&sup2; = <strong>' + e.toFixed(2) + ' J</strong> = ' + (e/1000).toFixed(4) + ' kJ';
+  r.style.display = 'block';
+}
+function calcLeistung() {
+  var e = parseFloat(document.getElementById('leist_e').value);
+  var t = parseFloat(document.getElementById('leist_t').value);
+  var r = document.getElementById('leist_result');
+  if (isNaN(e) || isNaN(t) || t === 0) { r.innerHTML = 'Bitte g&uuml;ltige Werte eingeben.'; r.style.display='block'; return; }
+  var p = e / t;
+  r.innerHTML = 'P = ' + e + ' J &divide; ' + t + ' s = <strong>' + p.toFixed(2) + ' W</strong> = ' + (p/1000).toFixed(4) + ' kW';
+  r.style.display = 'block';
+}
+function calcWirkung() {
+  var g = parseFloat(document.getElementById('wg_genutzt').value);
+  var z = parseFloat(document.getElementById('wg_zugef').value);
+  var r = document.getElementById('wg_result');
+  if (isNaN(g) || isNaN(z) || z === 0) { r.innerHTML = 'Bitte g&uuml;ltige Werte eingeben.'; r.style.display='block'; return; }
+  var eta = g / z;
+  r.innerHTML = '&eta; = ' + g + ' J &divide; ' + z + ' J = <strong>' + eta.toFixed(3) + '</strong> = <strong>' + (eta*100).toFixed(1) + '%</strong>';
+  r.style.display = 'block';
+}
+function calcKwh() {
+  var v = parseFloat(document.getElementById('kwh_val').value);
+  var r = document.getElementById('kwh_result');
+  if (isNaN(v)) { r.innerHTML = 'Bitte einen Wert eingeben.'; r.style.display='block'; return; }
+  var j = v * 3600000;
+  r.innerHTML = v + ' kWh = <strong>' + j.toLocaleString('de-CH') + ' J</strong> = ' + (j/1000).toLocaleString('de-CH') + ' kJ';
+  r.style.display = 'block';
+}
+
+// ---- GLOSSARY FILTER ----
+function filterGloss() {
+  var val = document.getElementById('glossSearch').value.toLowerCase();
+  var rows = document.querySelectorAll('#glossBody tr');
+  for (var i = 0; i < rows.length; i++) {
+    var text = rows[i].textContent.toLowerCase();
+    if (text.indexOf(val) >= 0) { rows[i].classList.remove('hidden'); }
+    else { rows[i].classList.add('hidden'); }
+  }
+}
+
+// ---- FLASHCARDS ----
+var allCards = [
+  {topic:'lage_bew', q:'Wie lautet die Formel f\u00fcr die Lageenergie?', a:'E\u2098\u2097\u2085\u2084\u2085 = m \u00b7 g \u00b7 h \n(m = Masse, g = 9,81 m/s\u00b2, h = H\u00f6he)'},
+  {topic:'lage_bew', q:'Wie lautet die Formel f\u00fcr die Bewegungsenergie?', a:'E\u2098\u2091\u1d40 = \u00bd \u00b7 m \u00b7 v\u00b2 \n(m = Masse, v = Geschwindigkeit)'},
+  {topic:'lage_bew', q:'Was ist der Wert der Erdbeschleunigung g?', a:'g = 9,81 m/s\u00b2'},
+  {topic:'lage_bew', q:'Von welchen zwei Gr\u00f6\u00dfen h\u00e4ngt die Lageenergie ab?', a:'Von der Masse (m) und der H\u00f6he (h) des K\u00f6rpers.'},
+  {topic:'lage_bew', q:'Von welchen zwei Gr\u00f6\u00dfen h\u00e4ngt die Bewegungsenergie ab?', a:'Von der Masse (m) und der Geschwindigkeit (v).'},
+  {topic:'lage_bew', q:'Was passiert mit der Lageenergie einer fallenden Nuss?', a:'Sie wird in Bewegungsenergie umgewandelt. Am Boden ist alle Lageenergie in Bewegungsenergie umgewandelt.'},
+  {topic:'lage_bew', q:'Was sind Energieumwandlungen beim Stausee?', a:'Lageenergie (Wasser) \u2192 Bewegungsenergie (fallendes Wasser) \u2192 Elektrische Energie (Turbine/Generator)'},
+  {topic:'lage_bew', q:'Was besagt der Energieerhaltungssatz?', a:'Energie kann weder erzeugt noch vernichtet werden \u2013 sie wird nur von einer Form in eine andere umgewandelt.'},
+  {topic:'wirkung', q:'Was beschreibt der Wirkungsgrad \u03b7?', a:'Das Verh\u00e4ltnis von genutzter zu zugef\u00fchrter Energie: \u03b7 = E_genutzt / E_zugef\u00fchrt'},
+  {topic:'wirkung', q:'Wie lautet die Formel f\u00fcr den Wirkungsgrad?', a:'\u03b7 = genutzte Energie / zugef\u00fchrte Energie \n(Wert zwischen 0 und 1, oder 0\u2013100%)'},
+  {topic:'wirkung', q:'Welche Lampe hat den h\u00f6chsten Wirkungsgrad?', a:'LED-Lampe: ca. 40%. Gl\u00fchlampe: nur ca. 5%.'},
+  {topic:'wirkung', q:'Was ist Energieentwertung?', a:'Bei jeder Energieumwandlung wird ein Teil in thermische Energie umgewandelt, die nicht mehr nutzbar ist.'},
+  {topic:'wirkung', q:'Warum ist ein Perpetuum mobile unm\u00f6glich?', a:'Weil bei jeder Energieumwandlung ein Teil in thermische Energie (Reibung) umgewandelt wird. Energie kann nicht aus dem Nichts entstehen.'},
+  {topic:'wirkung', q:'Was bedeutet ein Wirkungsgrad von 0,9?', a:'90% der zugef\u00fchrten Energie wird in die gew\u00fcnschte Energieform umgewandelt. 10% gehen als Nutzlose Energie (meist W\u00e4rme) verloren.'},
+  {topic:'leistung', q:'Wie lautet die Formel f\u00fcr die Leistung?', a:'P = E / t \n(P in Watt, E in Joule, t in Sekunden)'},
+  {topic:'leistung', q:'Was ist die Einheit der Leistung?', a:'Watt [W]. 1 W = 1 J/s (1 Joule pro Sekunde)'},
+  {topic:'leistung', q:'Was bedeutet 1 kWh in Joule?', a:'1 kWh = 3 600 000 J = 3600 kJ'},
+  {topic:'leistung', q:'Wie rechnet man kWh in Joule um?', a:'1 kWh = 1 kW \u00b7 1 h = 1000 W \u00b7 3600 s = 3 600 000 J'},
+  {topic:'leistung', q:'Was verbraucht ein Ger\u00e4t im Stand-by-Betrieb?', a:'Es verbraucht weiterhin Energie (z.B. Fernseher: ca. 0,5 W). Im Jahr summiert sich das zu erheblichen Kosten.'},
+  {topic:'leistung', q:'Was ist die 2000-Watt-Gesellschaft?', a:'Ein Modell f\u00fcr nachhaltiges Leben mit maximal 2000 W Dauerleistung pro Person. Die Schweiz liegt aktuell bei ca. 5000 W.'},
+  {topic:'leistung', q:'Was ist der Unterschied zwischen kW und kWh?', a:'kW (Kilowatt) ist eine Einheit der Leistung (Energie pro Zeit). kWh (Kilowattstunde) ist eine Einheit der Energie.'},
+  {topic:'versorgung', q:'Was sind erneuerbare Energietr\u00e4ger? Nenne drei Beispiele.', a:'Energiequellen, die sich schnell erneuern oder quasi unbegrenzt verf\u00fcgbar sind. Beispiele: Sonne, Wind, Wasser (Wasserenergie), Biomasse.'},
+  {topic:'versorgung', q:'Was sind nicht erneuerbare Energietr\u00e4ger? Nenne zwei Beispiele.', a:'Rohstoffe, die sich nicht erneuern und endlich sind. Beispiele: Kohle, Erd\u00f6l, Erdgas, Uran.'},
+  {topic:'versorgung', q:'Woher kommt der gr\u00f6\u00dfte Teil der Schweizer Elektrizit\u00e4t (2019)?', a:'Ca. 54% aus Wasserenergieanlage (Wasserkraft), ca. 37% aus Kernenergieanlage.'},
+  {topic:'versorgung', q:'Wie funktioniert eine Fotovoltaikanlage?', a:'Solarzellen wandeln die Strahlungsenergie der Sonne direkt in elektrische Energie um.'},
+  {topic:'versorgung', q:'Wie funktioniert eine Biomasseanlage?', a:'Organische Substanzen (Pflanzen, Abf\u00e4lle) werden verbrannt oder verg\u00e4rt. Dabei entsteht thermische Energie oder Biogas.'},
+  {topic:'sparen', q:'Nenne drei M\u00f6glichkeiten, im Haushalt Energie zu sparen.', a:'Z.B.: Stand-by vermeiden, LED-Lampen verwenden, Warmwasser sparsam nutzen, Ger\u00e4te ausschalten, Vollastbetrieb bei Waschmaschine.'},
+  {topic:'sparen', q:'Was sind Massnahmen f\u00fcr ein energieeffizientes Haus?', a:'Gute W\u00e4rmed\u00e4mmung, effiziente Heizung, Sonnenkollektoren, intelligente L\u00fcftung, energieeffiziente Beleuchtung.'},
+  {topic:'sparen', q:'Warum sollte man den Fernseher nicht im Stand-by lassen?', a:'Der Fernseher verbraucht im Stand-by-Betrieb weiterhin Energie (ca. 0,5 W). \u00dcber ein Jahr summiert sich das und erzeugt unn\u00f6tige Kosten und CO\u2082-Emissionen.'},
+  {topic:'sparen', q:'Welcher Brennstoff verursacht beim Abbau und Verbrennen gro\u00dfe Umweltbelastungen?', a:'Kohle (und Erd\u00f6l). Beim Abbau in Bergwerken und der Verbrennung entstehen Umweltbelastungen und CO\u2082.'}
+];
+
+var fcFiltered = [];
+var fcIndex = 0;
+var fcFlipped = false;
+
+function initFC() {
+  var filter = document.getElementById('fcFilter').value;
+  if (filter === 'all') { fcFiltered = allCards.slice(); }
+  else { fcFiltered = allCards.filter(function(c){ return c.topic === filter; }); }
+  fcIndex = 0;
+  fcFlipped = false;
+  renderFC();
+}
+
+function shuffleFC() {
+  for (var i = fcFiltered.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = fcFiltered[i]; fcFiltered[i] = fcFiltered[j]; fcFiltered[j] = tmp;
+  }
+  fcIndex = 0; fcFlipped = false; renderFC();
+}
+
+function renderFC() {
+  if (!fcFiltered.length) {
+    document.getElementById('fcQ').textContent = 'Keine Karten f\u00fcr dieses Thema.';
+    document.getElementById('fcA').textContent = '';
+    document.getElementById('fcCounter').textContent = '';
+    return;
+  }
+  var c = fcFiltered[fcIndex];
+  document.getElementById('fcQ').textContent = c.q;
+  document.getElementById('fcA').textContent = c.a;
+  document.getElementById('fcCounter').textContent = (fcIndex + 1) + ' / ' + fcFiltered.length;
+  var wrap = document.getElementById('fcWrap');
+  if (fcFlipped) { wrap.classList.add('flipped'); } else { wrap.classList.remove('flipped'); }
+}
+
+function flipFC() { fcFlipped = !fcFlipped; renderFC(); }
+function nextFC() { if (fcFiltered.length) { fcIndex = (fcIndex + 1) % fcFiltered.length; fcFlipped = false; renderFC(); } }
+function prevFC() { if (fcFiltered.length) { fcIndex = (fcIndex - 1 + fcFiltered.length) % fcFiltered.length; fcFlipped = false; renderFC(); } }
+
+initFC();
+
+// ---- QUIZ ----
+var allQuestions = [
+  {topic:'lage_bew', diff:'easy', q:'Von welchen zwei Gr\u00f6\u00dfen h\u00e4ngt die Lageenergie ab?', opts:['Masse und Geschwindigkeit','Masse und H\u00f6he','H\u00f6he und Geschwindigkeit','Volumen und Dichte'], ans:1},
+  {topic:'lage_bew', diff:'easy', q:'Was ist die Einheit der Energie?', opts:['Watt [W]','Newton [N]','Joule [J]','Meter [m]'], ans:2},
+  {topic:'lage_bew', diff:'easy', q:'Was passiert mit der Lageenergie einer fallenden Kugel?', opts:['Sie wird vernichtet','Sie bleibt gleich','Sie wird in Bewegungsenergie umgewandelt','Sie wird in elektrische Energie umgewandelt'], ans:2},
+  {topic:'lage_bew', diff:'easy', q:'Was ist die Erdbeschleunigung g?', opts:['9,81 m/s','9,81 m/s\u00b2','9,81 km/h','0,981 m/s\u00b2'], ans:1},
+  {topic:'lage_bew', diff:'medium', q:'Eine Nuss wiegt 10 g (0,01 kg) und wird 40 m hoch fallen gelassen. Wie gro\u00df ist ihre Lageenergie?', opts:['0,39 J','3,92 J','39,2 J','392 J'], ans:1},
+  {topic:'lage_bew', diff:'medium', q:'Welche Energieumwandlungskette beschreibt einen Stausee?', opts:['Elektrisch \u2192 Kinetisch \u2192 Potentiell','Lageenergie \u2192 Bewegungsenergie \u2192 Elektrische Energie','Thermisch \u2192 Kinetisch \u2192 Elektrisch','Chemisch \u2192 Thermisch \u2192 Elektrisch'], ans:1},
+  {topic:'lage_bew', diff:'medium', q:'Warum lassen Kr\u00e4hen N\u00fcsse nicht aus zu gro\u00dfer H\u00f6he fallen?', opts:['Die N\u00fcsse k\u00f6nnten zu weit wegfliegen und von anderen V\u00f6geln gestohlen werden','Die Kr\u00e4hen sind zu schw\u00e4chlich, h\u00f6her zu fliegen','Es gibt keine Erdbeschleunigung in gro\u00dfen H\u00f6hen','Die Lageenergie w\u00e4re zu klein'], ans:0},
+  {topic:'lage_bew', diff:'hard', q:'Ein Achterbahnwagen (300 kg) befindet sich in 100 m H\u00f6he. Wie gro\u00df ist seine Lageenergie?', opts:['294 300 J','29 430 J','2 943 000 J','30 000 J'], ans:0},
+  {topic:'lage_bew', diff:'hard', q:'Wie rechnet man die Formel f\u00fcr die Lageenergie nach der H\u00f6he h um?', opts:['h = E \u2013 m \u00b7 g','h = E / (m \u00b7 g)','h = E \u00b7 m \u00b7 g','h = m \u00b7 g / E'], ans:1},
+  {topic:'wirkung', diff:'easy', q:'Was beschreibt der Wirkungsgrad \u03b7?', opts:['Die gesamte genutzte Energie','Den Anteil der genutzten an der zugef\u00fchrten Energie','Die Geschwindigkeit der Energieumwandlung','Die Menge an W\u00e4rme'], ans:1},
+  {topic:'wirkung', diff:'easy', q:'Welche Aussage zum Perpetuum mobile ist korrekt?', opts:['Ein Perpetuum mobile ist m\u00f6glich, aber teuer','Ein Perpetuum mobile l\u00e4sst sich nie bauen','Ein Perpetuum mobile wurde 1980 erfunden','Ein Perpetuum mobile braucht nur wenig Energie'], ans:1},
+  {topic:'wirkung', diff:'easy', q:'Welche Lampe hat den gr\u00f6\u00dften Wirkungsgrad?', opts:['Gl\u00fchlampe (ca. 5%)','Halogenlampe (ca. 10%)','Leuchtstoffr\u00f6hre (ca. 25%)','LED-Lampe (ca. 40%)'], ans:3},
+  {topic:'wirkung', diff:'medium', q:'Eine Lampe erh\u00e4lt 500 J. Davon werden 100 J als Strahlung genutzt. Wie gro\u00df ist der Wirkungsgrad?', opts:['\u03b7 = 0,1 = 10%','\u03b7 = 0,2 = 20%','\u03b7 = 0,5 = 50%','\u03b7 = 0,8 = 80%'], ans:1},
+  {topic:'wirkung', diff:'medium', q:'Warum ist die Energieentwertung ein Problem?', opts:['Weil Energie dadurch verloren geht','Weil thermische Energie nicht mehr sinnvoll genutzt werden kann','Weil die Lageenergie kleiner wird','Weil Elektrizit\u00e4t entstummt'], ans:1},
+  {topic:'wirkung', diff:'hard', q:'Eine Lampe hat Wirkungsgrad 40% und erh\u00e4lt 1000 J. Wie viel wird als thermische Energie abgegeben?', opts:['400 J','600 J','1000 J','40 J'], ans:1},
+  {topic:'leistung', diff:'easy', q:'Was ist die Einheit der Leistung?', opts:['Joule [J]','Watt [W]','Newton [N]','Volt [V]'], ans:1},
+  {topic:'leistung', diff:'easy', q:'Wie viel Joule entspricht 1 kWh?', opts:['1000 J','360 000 J','3 600 000 J','36 000 J'], ans:2},
+  {topic:'leistung', diff:'easy', q:'Was bedeutet 1 Watt?', opts:['1 Joule pro Minute','1 Joule pro Stunde','1 Joule pro Sekunde','1 Kilojoule pro Sekunde'], ans:2},
+  {topic:'leistung', diff:'medium', q:'Du hast beim Treppensteigen eine Leistung von 200 W und brauchst 20 s. Wie viel Energie wurde umgewandelt?', opts:['10 J','1000 J','4000 J','40 000 J'], ans:2},
+  {topic:'leistung', diff:'medium', q:'Was ist der Unterschied zwischen kW und kWh?', opts:['kW ist Energie, kWh ist Leistung','Beide messen das Gleiche','kW ist Leistung, kWh ist Energie','kW wird f\u00fcr W\u00e4rme, kWh f\u00fcr Strom verwendet'], ans:2},
+  {topic:'leistung', diff:'hard', q:'Ein Backofen (2 kW) l\u00e4uft 1 Stunde. Wie viel Energie in kWh und Joule nutzt er?', opts:['2 kWh = 7 200 000 J','1 kWh = 3 600 000 J','2 kWh = 3 600 000 J','0,5 kWh = 1 800 000 J'], ans:0},
+  {topic:'versorgung', diff:'easy', q:'Welcher Energietr\u00e4ger ist NICHT erneuerbar?', opts:['Sonnenstrahlung','Wind','Erd\u00f6l','Wasser'], ans:2},
+  {topic:'versorgung', diff:'easy', q:'Welche Anlage nutzt Strahlungsenergie der Sonne direkt f\u00fcr Strom?', opts:['Biomasseanlage','Fotovoltaikanlage','Kohleenergieanlage','Wasserenergieanlage'], ans:1},
+  {topic:'versorgung', diff:'medium', q:'Wie viel Prozent der Schweizer Elektrizit\u00e4t stammten 2019 aus Wasserenergieanlage?', opts:['Ca. 20%','Ca. 37%','Ca. 54%','Ca. 70%'], ans:2},
+  {topic:'versorgung', diff:'medium', q:'Was ist Biomasse?', opts:['Ein Mineral im Erdinneren','Organische Substanzen wie Pflanzen, Tiere oder Abf\u00e4lle','Ein fossiler Brennstoff','Radioaktives Material'], ans:1},
+  {topic:'versorgung', diff:'hard', q:'Welche Energieumwandlung findet in einem Kernkraftwerk statt?', opts:['Strahlungsenergie \u2192 Elektrisch','Kernenergie \u2192 Thermisch \u2192 Elektrisch','Chemisch \u2192 Elektrisch','Mechanisch \u2192 Elektrisch'], ans:1},
+  {topic:'sparen', diff:'easy', q:'Was verbraucht ein Ger\u00e4t im Stand-by-Betrieb?', opts:['Gar keine Energie','Sehr viel Energie','Weiterhin Energie (wenn auch wenig)','Nur Energie beim Einschalten'], ans:2},
+  {topic:'sparen', diff:'easy', q:'Welche Lampe ist am sparsamsten?', opts:['Gl\u00fchlampe','Halogenlampe','LED-Lampe','Leuchtstoffr\u00f6hre'], ans:2},
+  {topic:'sparen', diff:'medium', q:'Familie Studer hat einen Fernseher (100 W bei Betrieb, 0,5 W im Stand-by) und schaut 2 h/Tag. Wie lange l\u00e4uft er im Stand-by?', opts:['2 h','22 h','24 h','12 h'], ans:1},
+  {topic:'sparen', diff:'hard', q:'Leander behauptet, Ger\u00e4te sollten im Stand-by lassen statt ausschalten, weil das Einschalten viel Energie braucht. Hat er recht?', opts:['Ja, das Einschalten verbraucht mehr Energie','Nein, Stand-by verbraucht dauerhaft Energie; Ausschalten spart mehr','Beides ist gleich','Es kommt auf das Ger\u00e4t an, im Allgemeinen hat er recht'], ans:1}
+];
+
+var quizList = [];
+var quizIndex = 0;
+var quizScore = 0;
+var quizWrong = [];
+var quizAnswered = false;
+
+function startQuiz() {
+  var topic = document.getElementById('quizTopic').value;
+  var diff = document.getElementById('quizDiff').value;
+  quizList = allQuestions.filter(function(q) {
+    return (topic === 'all' || q.topic === topic) && (diff === 'all' || q.diff === diff);
+  });
+  for (var i = quizList.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = quizList[i]; quizList[i] = quizList[j]; quizList[j] = tmp;
+  }
+  quizIndex = 0; quizScore = 0; quizWrong = []; quizAnswered = false;
+  document.getElementById('quizIntro').style.display = 'none';
+  document.getElementById('quizResults').style.display = 'none';
+  if (!quizList.length) {
+    document.getElementById('quizArea').style.display = 'none';
+    document.getElementById('quizIntro').textContent = 'Keine Fragen f\u00fcr diese Auswahl.';
+    document.getElementById('quizIntro').style.display = 'block';
+    return;
+  }
+  document.getElementById('quizArea').style.display = 'block';
+  renderQuestion();
+}
+
+function renderQuestion() {
+  var q = quizList[quizIndex];
+  var pct = (quizIndex / quizList.length * 100) + '%';
+  document.getElementById('quizProgress').style.width = pct;
+  document.getElementById('quizStatus').textContent = 'Frage ' + (quizIndex + 1) + ' von ' + quizList.length + ' \u2013 Punkte: ' + quizScore;
+  var diffMap = {easy:'Einfach', medium:'Mittel', hard:'Schwer'};
+  var diffClass = {easy:'diff-easy', medium:'diff-medium', hard:'diff-hard'};
+  var html = '<span class="diff-badge ' + diffClass[q.diff] + '">' + diffMap[q.diff] + '</span>';
+  html += '<div class="quiz-question">' + q.q + '</div>';
+  html += '<div class="quiz-options">';
+  for (var i = 0; i < q.opts.length; i++) {
+    html += '<button onclick="answerQ(' + i + ')">' + q.opts[i] + '</button>';
+  }
+  html += '</div>';
+  document.getElementById('quizCard').innerHTML = html;
+  quizAnswered = false;
+}
+
+function answerQ(chosen) {
+  if (quizAnswered) return;
+  quizAnswered = true;
+  var q = quizList[quizIndex];
+  var btns = document.querySelectorAll('.quiz-options button');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].disabled = true;
+    if (i === q.ans) { btns[i].classList.add('correct'); }
+    else if (i === chosen) { btns[i].classList.add('wrong'); }
+  }
+  var correct = (chosen === q.ans);
+  if (correct) {
+    quizScore++;
+    document.getElementById('quizCard').innerHTML += '<div class="quiz-feedback ok">\u2713 Richtig!</div>';
+  } else {
+    quizWrong.push({q: q.q, a: q.opts[q.ans]});
+    document.getElementById('quizCard').innerHTML += '<div class="quiz-feedback fail">\u2717 Falsch. Richtige Antwort: ' + q.opts[q.ans] + '</div>';
+  }
+  var nextLabel = (quizIndex + 1 < quizList.length) ? 'N\u00e4chste Frage \u2192' : 'Ergebnis anzeigen';
+  document.getElementById('quizCard').innerHTML += '<button class="quiz-next" onclick="nextQuestion()">' + nextLabel + '</button>';
+}
+
+function nextQuestion() {
+  quizIndex++;
+  if (quizIndex < quizList.length) { renderQuestion(); }
+  else { showResults(); }
+}
+
+function showResults() {
+  document.getElementById('quizProgress').style.width = '100%';
+  document.getElementById('quizArea').style.display = 'none';
+  var pct = Math.round(quizScore / quizList.length * 100);
+  var color = pct >= 75 ? '#2d7a4f' : pct >= 50 ? '#f0a500' : '#c0392b';
+  var circumference = 2 * 3.14159 * 45;
+  var dash = (pct / 100) * circumference;
+  var html = '<div class="quiz-results">';
+  html += '<h3>Quiz abgeschlossen!</h3>';
+  html += '<div class="result-ring-wrap"><svg class="result-ring" viewBox="0 0 110 110">';
+  html += '<circle cx="55" cy="55" r="45" fill="none" stroke="#e0e0e0" stroke-width="10"/>';
+  html += '<circle cx="55" cy="55" r="45" fill="none" stroke="' + color + '" stroke-width="10" stroke-dasharray="' + dash + ' ' + circumference + '" stroke-dashoffset="' + (circumference * 0.25) + '" stroke-linecap="round" transform="rotate(-90 55 55)"/>';
+  html += '<text x="55" y="50" text-anchor="middle" font-size="18" fill="' + color + '" font-weight="bold">' + pct + '%</text>';
+  html += '<text x="55" y="66" text-anchor="middle" font-size="9" fill="#666">' + quizScore + '/' + quizList.length + '</text>';
+  html += '</svg></div>';
+  if (pct >= 85) { html += '<p>\uD83C\uDF89 Ausgezeichnet! Du kennst das Kapitel sehr gut.</p>'; }
+  else if (pct >= 65) { html += '<p>\uD83D\uDC4D Gut gemacht! Noch ein bisschen \u00fcben.</p>'; }
+  else { html += '<p>\uD83D\uDCA1 Weiter \u00fcben! Schau nochmal die Konzepte an.</p>'; }
+  if (quizWrong.length > 0) {
+    html += '<div class="review-list"><h3>Falsch beantwortet:</h3>';
+    for (var i = 0; i < quizWrong.length; i++) {
+      html += '<div class="review-item"><div class="ri-q">' + quizWrong[i].q + '</div><div class="ri-a">\u2713 ' + quizWrong[i].a + '</div></div>';
+    }
+    html += '</div>';
+  }
+  html += '<button class="quiz-next" onclick="startQuiz()" style="margin-top:14px;">Quiz wiederholen</button>';
+  html += '</div>';
+  document.getElementById('quizResults').innerHTML = html;
+  document.getElementById('quizResults').style.display = 'block';
+}
+</script>
+</body>
+</html>
